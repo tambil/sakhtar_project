@@ -39,7 +39,7 @@ int main() {
     double dc_drift = 0.05; // 5% per second
     double amplitude = 300.0; // ADC units
     double amplitude_variation = 0.05; // 5% per second
-    double noise_stddev = DURATION; // Standard deviation for Gaussian noise
+    double noise_stddev = 10.0; // Standard deviation for Gaussian noise
     double signal_array[SAMPLE_RATE * DURATION];
 
 
