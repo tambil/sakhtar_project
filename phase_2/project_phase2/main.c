@@ -60,7 +60,7 @@ int main(void) {
         printf("%c", c);
         if (c == 'S') {
             adc_capture(sample_buf, N_SAMPLES);
-            float frequency = estimate_frequency(sample_buf, N_SAMPLES, SMPLE_RATE); // Assuming 50kHz sample rate
+            float frequency = estimate_frequency(sample_buf, N_SAMPLES, SMPLE_RATE);
             printf("Estimated Frequency: %.2f Hz\n", frequency);
         }
     }
