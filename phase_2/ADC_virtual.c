@@ -1,64 +1,52 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <time.h>
 
-#define N_SAMPLES 1000
-#define THRESHOLD 2000 // Adjust this threshold based on your signal
-#define SMPLE_RATE 10000
-uint16_t sample_buf[N_SAMPLES];
+#define SAMPLE_RATE 10000 // 10 KSPS
+#define DURATION 1 // 10 seconds
+#define PI 3.14159265358979323846
+#define base_frequency  2000.0
+#define frequency_drift  0.01
+#define dc_offset  1300.0
+#define dc_drift  0.05
+#define amplitude  300.0
+#define amplitude_variation 0.05
+#define noise_stddev  0.67
 
-void __not_in_flash_func(adc_capture)(uint16_t *buf, size_t count) {
-    adc_fifo_setup(true, false, 0, false, false);
-    adc_run(true);
-    for (size_t i = 0; i < count; i = i + 1)
-        buf[i] = adc_fifo_get_blocking();
-    adc_run(false);
-    adc_fifo_drain();
+// Function to generate Gaussian noise
+double generate_gaussian_noise(double mean, double stddev) {
+    static double spare;
+    static int has_spare = 0;
+
+    if (has_spare) {
+        has_spare = 0;
+        return mean + stddev * spare;
+    }
+
+    has_spare = 1;
+    double u, v, s;
+    do {
+        u = (rand() / ((double) RAND_MAX)) * 2.0 - 1.0;
+        v = (rand() / ((double) RAND_MAX)) * 2.0 - 1.0;
+        s = u * u + v * v;
+    } while (s >= 1.0 || s == 0.0);
+
+    s = sqrt(-2.0 * log(s) / s);
+    spare = v * s;
+    return mean + stddev * u * s;
+}
+double ADC_virtual(int num) {
+    double t = (double) num / SAMPLE_RATE;
+    double current_frequency = base_frequency * (1 + frequency_drift * t);
+    double current_dc_offset = dc_offset * (1 + dc_drift * t);
+    double current_amplitude = amplitude * (1 + amplitude_variation * t);
+    double noise = generate_gaussian_noise(0, noise_stddev);
+    double signal = current_dc_offset + current_amplitude * sin(2 * PI * current_frequency * t) + noise;
+    return signal;
 }
 
-float estimate_frequency(uint16_t *buf, size_t count, float sample_rate) {
-    size_t peak_count = 0;
-    size_t last_peak_index = 0;
-    float total_period = 0;
+int main() {
+    double signal_arr[SAMPLE_RATE * DURATION];
 
-    for (size_t i = 1; i < count - 1; i++) {
-        if (buf[i] > THRESHOLD && buf[i] > buf[i - 1] && buf[i] > buf[i + 1]) {
-            if (peak_count > 0) {
-                total_period += (i - last_peak_index) / sample_rate;
-            }
-            last_peak_index = i;
-            peak_count++;
-        }
-    }
-
-    if (peak_count > 1) {
-        float average_period = total_period / (peak_count - 1);
-        return 1.0 / average_period;
-    } else {
-        return 0; // Frequency estimation not possible
-    }
-}
-
-int main(void) {
-    stdio_init_all();
-    adc_init();
-    adc_set_temp_sensor_enabled(true);
-
-    // Set all pins to input (as far as SIO is concerned)
-    gpio_set_dir_all_bits(0);
-    for (int i = 2; i < 30; ++i) {
-        gpio_set_function(i, GPIO_FUNC_SIO);
-        if (i >= 26) {
-            gpio_disable_pulls(i);
-            gpio_set_input_enabled(i, false);
-        }
-    }
-
-    while (1) {
-        char c = getchar();
-        printf("%c", c);
-        if (c == 'S') {
-            adc_capture(sample_buf, N_SAMPLES);
-            float frequency = estimate_frequency(sample_buf, N_SAMPLES, SMPLE_RATE);
-            printf("Estimated Frequency: %.2f Hz\n", frequency);
-        }
-    }
 }
