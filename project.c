@@ -42,7 +42,8 @@ int main() {
     double noise_stddev = 10.0; // Standard deviation for Gaussian noise
     double signal_array[SAMPLE_RATE * DURATION];
 
-
+    remove("signal.txt"); 
+    FILE *file = fopen("signal.txt", "w");
 
     for (int i = 0; i < SAMPLE_RATE * DURATION; i++) {
         double t = (double)i / SAMPLE_RATE;
@@ -53,6 +54,7 @@ int main() {
 
         double signal = current_dc_offset + current_amplitude * sin(2 * PI * current_frequency * t) + noise;
         signal_array[i] = signal;
+        fprintf(file, "%f %f\n", t, signal);
         if (i == SAMPLE_RATE*DURATION-1) {
             printf("current_frequency: %f\n", current_frequency);
             printf("current_dc_offset: %f\n", current_dc_offset);
@@ -60,6 +62,8 @@ int main() {
 
         }
     }
+
+    fclose(file);
 
     return 0;
 }
