@@ -4,11 +4,12 @@
 #include <time.h>
 
 #define SAMPLE_RATE 10000 // 10 KSPS
-#define DURATION 1 // 10 seconds
-#define ADC_SAMPLES 1000
+#define DURATION 1 
+#define MAX_SAMPLES 5000
+#define ADC_SAMPLES 4000
 #define PI 3.14159265358979323846
 #define base_frequency  1400.0
-#define frequency_drift  0.01
+#define frequency_drift  0.10
 #define dc_offset  1300.0
 #define dc_drift  0.05
 #define amplitude  300.0
@@ -67,7 +68,7 @@ double peak_detection_frequency(double signal[], double length, double sampling_
 
 
 int main() {
-    double signal_arr[SAMPLE_RATE * DURATION];
+    double signal_arr[MAX_SAMPLES];
     double index = 0;
     double estimate_frequency = 0;
     double real_frequency = 0;
@@ -78,16 +79,16 @@ int main() {
     FILE *real_freq_file =fopen("real_freq.txt", "w");
     while (index<ADC_SAMPLES)
     {
-        for (int i = 0; i < SAMPLE_RATE * DURATION; i++) {
+        for (int i = - MAX_SAMPLES/2; i < MAX_SAMPLES/2; i++) {
             ADC_out = ADC_virtual(i+index);
-            signal_arr[i] = ADC_out.signal;
+            signal_arr[i + MAX_SAMPLES/2] = ADC_out.signal;
             real_frequency = ADC_out.frequency;
             if (i == 0)
             {
                 fprintf(real_freq_file, "%f \n", real_frequency);
             }
         }
-        estimate_frequency = peak_detection_frequency(signal_arr, SAMPLE_RATE * DURATION, SAMPLE_RATE);
+        estimate_frequency = peak_detection_frequency(signal_arr, MAX_SAMPLES, SAMPLE_RATE);
         fprintf(est_freq_file, "%f \n", estimate_frequency);
         
         index ++;
