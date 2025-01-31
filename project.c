@@ -31,19 +31,19 @@ double generate_gaussian_noise(double mean, double stddev) {
 }
 
 int main() {
-    srand(time(NULL));
 
-    double base_frequency = 200.0; // Hz
-    double frequency_drift = 0.01; // 1% per second
-    double dc_offset = 1300.0; // ADC units
-    double dc_drift = 0.05; // 5% per second
-    double amplitude = 300.0; // ADC units
-    double amplitude_variation = 0.05; // 5% per second
-    double noise_stddev = 10.0; // Standard deviation for Gaussian noise
-    double signal_array[SAMPLE_RATE * DURATION];
-
+    double base_frequency = 2000.0;
+    double frequency_drift = 0.01;
+    double dc_offset = 1300.0;
+    double dc_drift = 0.05;
+    double amplitude = 300.0;
+    double amplitude_variation = 0.05;
+    double noise_stddev = 0.67;
+    
     remove("signal.txt"); 
+    remove("freq.txt");
     FILE *file = fopen("signal.txt", "w");
+    FILE *freq_file = fopen("freq.txt", "w");
 
     for (int i = 0; i < SAMPLE_RATE * DURATION; i++) {
         double t = (double)i / SAMPLE_RATE;
@@ -53,17 +53,12 @@ int main() {
         double noise = generate_gaussian_noise(0, noise_stddev);
 
         double signal = current_dc_offset + current_amplitude * sin(2 * PI * current_frequency * t) + noise;
-        signal_array[i] = signal;
         fprintf(file, "%f %f\n", t, signal);
-        if (i == SAMPLE_RATE*DURATION-1) {
-            printf("current_frequency: %f\n", current_frequency);
-            printf("current_dc_offset: %f\n", current_dc_offset);
-            printf("current_amplitude: %f\n", current_amplitude);
-
-        }
+        fprintf(freq_file, "%f %f\n", t, current_frequency);
     }
 
     fclose(file);
+    fclose(freq_file);
 
     return 0;
 }
