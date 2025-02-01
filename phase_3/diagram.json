@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "author": "Elecia White",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-pi-pico",
+      "id": "pico",
+      "top": 0,
+      "left": -92,
+      "attrs": { "builder": "pico-sdk" }
+    },
+    { "type": "chip-signal-generator", "id": "chip1", "top": 87.42, "left": 72, "attrs": {} }
+  ],
+  "connections": [
+    [ "pico:GP0", "$serialMonitor:RX", "", [] ],
+    [ "pico:GP1", "$serialMonitor:TX", "", [] ],
+    [ "pico:GP26", "chip1:OUT", "green", [ "h48.8", "v-51.15", "h172.8", "v57.6" ] ]
+  ],
+  "dependencies": {}
+}
